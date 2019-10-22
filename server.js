@@ -4,7 +4,12 @@ let express = require('express');
 let cors = require('cors');
 let app = express();
 let server = require('http').Server(app);
-let io = require('socket.io')(server);
+let io = require('socket.io')(server,  { wsEngine: 'ws' });
+let dotenv = require('dotenv').config();
+let SegfaultHandler = require('segfault-handler');
+
+SegfaultHandler.registerHandler("crash.log"); // With no argument, SegfaultHandler will generate a generic log file name
+
 // The account id of the distributor
 let accountId;
 
@@ -61,7 +66,7 @@ let getBundleDetails = (req, res) => {
 
 // Subscribe to Platform Events
 let subscribeToPlatformEvents = () => {
-    var client = new faye.Client(org.oauth.instance_url + '/cometd/42.0/');
+    var client = new faye.Client(org.oauth.instance_url + '/cometd/47.0/');
     client.setHeader('Authorization', 'OAuth ' + org.oauth.access_token);
     client.subscribe('/event/Bundle_Submitted__e', function (message) {
         console.log('#### got Bundle_Submitted__e event');
@@ -110,11 +115,13 @@ app.get('/bundles', getBundles);
 app.get('/bundles/:bundleId', getBundleDetails);
 app.post('/approvals/:bundleId', orderBundle);
 
+/*
 let bayeux = new faye.NodeAdapter({ mount: '/faye', timeout: 45 });
 bayeux.attach(server);
 bayeux.on('disconnect', function (clientId) {
     console.log('Bayeux server disconnect');
 });
+*/
 
 let PORT = process.env.PORT || 5000;
 
@@ -126,12 +133,19 @@ let SF_CLIENT_SECRET = process.env.SF_CLIENT_SECRET;
 let SF_USER_NAME = process.env.SF_USER_NAME;
 let SF_USER_PASSWORD = process.env.SF_USER_PASSWORD;
 let SF_ENVIRONMENT = process.env.SF_ENVIRONMENT || 'sandbox'; // default to sandbox if env variable not set
+let SF_CALLBACK_URL = process.env.SF_CALLBACK_URL || 'http://localhost:5000/oauth/_callback';
+console.log(SF_CLIENT_ID);
+console.log(SF_CLIENT_SECRET);
+console.log(SF_USER_NAME);
+console.log(SF_USER_PASSWORD);
+console.log(SF_ENVIRONMENT);
+console.log(SF_CALLBACK_URL);
 
 let org = nforce.createConnection({
     clientId: SF_CLIENT_ID,
     clientSecret: SF_CLIENT_SECRET,
     environment: SF_ENVIRONMENT,
-    redirectUri: 'http://localhost:3000/oauth/_callback',
+    redirectUri: SF_CALLBACK_URL,
     mode: 'single',
     autoRefresh: true
 });
@@ -142,8 +156,11 @@ org.authenticate({ username: SF_USER_NAME, password: SF_USER_PASSWORD }, err => 
         console.error(err);
     } else {
         console.log("Salesforce authentication successful");
-        console.log(org.oauth.instance_url);
-        subscribeToPlatformEvents();
+        try {
+            subscribeToPlatformEvents();
+        } catch (e) {
+            console.error(e)
+        }
         // For this demo, we use the id of the first account as the distributor id.
         // Make sure there us at least one account in your Salesforce org.
         let q = "SELECT Id FROM Account LIMIT 1";
@@ -159,6 +176,5 @@ org.authenticate({ username: SF_USER_NAME, password: SF_USER_PASSWORD }, err => 
                 }
             }
         });
-
     }
 });
