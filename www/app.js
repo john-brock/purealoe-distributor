@@ -25,12 +25,12 @@ function renderBundle(bundle, isAnimated) {
                         </tr>
                     </table>
                     </div>   
-                    <div class="col-md-12 col-lg-5">
+                    <div class="col-md-12 col-lg-7">
                         <button class="btn btn-info" onclick="getBundleDetails('${bundle.bundleId}')" style="margin-bottom: 4px;">
                             <span class="glyphicon glyphicon-zoom-in" aria-hidden="true"></span>
                             View Details
                         </button>
-                        <button class="btn btn-info" onclick="orderBundle('${bundle.bundleId}')" style="margin-bottom: 4px;">
+                        <button class="btn btn-info" id="orderButton" onclick="renderOrderModal('${bundle.bundleId}')" style="margin-bottom: 4px;">
                             <span class="glyphicon glyphicon-ok" aria-hidden="true"></span>
                             Order Bundle
                         </button>
@@ -39,6 +39,58 @@ function renderBundle(bundle, isAnimated) {
                 </div>
             </div>
         </div>`;
+}
+
+function renderOrderModalInner(bundleId) {
+    return `
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title">Order Bundle</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+                </button>
+              </div>
+              <div class="modal-body">
+                <p>Submit your order today!</p>
+                <form>
+                 <input type="hidden" id="bundleIdInput" name="bundleId" value="">
+                 <div class="form-group">
+                    <div class="form-row">
+                       <div class="col">
+                          <input type="text" id="firstNameInput" class="form-control" placeholder="First name" value="Sally">
+                       </div>
+                       <div class="col">
+                          <input type="text" id="lastNameInput" class="form-control" placeholder="Last name" value="Suds">
+                       </div>
+                    </div>
+                 </div>
+                 <div class="form-group">
+                    <div class="form-row">
+                       <div class="col">
+                          <input type="phone" id="phoneNumberInput" class="form-control" placeholder="Phone Number" value="+15754304788">
+                       </div>
+                       <div class="col">
+                          <div class="form-check form-check-inline">
+                             <input class="form-check-input" type="radio" name="textOptions" id="smsUpdatesYes" value=true checked>
+                             <label class="form-check-label" for="smsUpdatesYes">Text Updates</label>
+                          </div>
+                          <div class="form-check form-check-inline">
+                             <input class="form-check-input" type="radio" name="textOptions" id="smsUpdatesNo" value=false>
+                             <label class="form-check-label" for="smsUpdatesNo">No Updates</label>
+                          </div>
+                       </div>
+                    </div>
+                 </div>
+                </form>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-primary" onclick="orderBundle('${bundleId}')">Order</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+              </div>
+            </div>
+          </div>
+    `;
 }
 
 // Render the merchandise list for a bundle
@@ -62,6 +114,13 @@ function renderBundleDetails(bundle, items) {
     html = html + "</table>"    
     var details = document.getElementById('details-' + bundle.bundleId);
     details.innerHTML = html;
+}
+
+function renderOrderModal(bundleId) {
+    var orderModal = $('#orderModal');
+    orderModal.html(renderOrderModalInner(bundleId));
+    orderModal.modal('show');
+    $('#bundleIdInput').val(bundleId);
 }
 
 function deleteBundle(bundleId) {
@@ -141,17 +200,85 @@ function getBundleDetails(bundleId) {
 }
 
 // Post approve message to Node server
-function orderBundle(bundleId) {
+function orderBundle() {
+    var bundleId = $('#bundleIdInput').val();
+    var firstName = $('#firstNameInput').val();
+    var lastName = $('#lastNameInput').val();
+    var phoneNumber = $('#phoneNumberInput').val();
+    var textUpdates = $('input[name=textOptions]:checked').val();
+
+    console.log(bundleId);
+    console.log(firstName);
+    console.log(lastName);
+    console.log(phoneNumber);
+    console.log(textUpdates);
+    
+    var requestBody = buildCompositeRestRequest(bundleId, firstName, lastName, phoneNumber, textUpdates);
+    console.log(requestBody);
     var xhr = new XMLHttpRequest(),
         method = 'POST',
         url = '/approvals/' + bundleId;
 
     xhr.open(method, url, true);
+    xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
     xhr.onload = function () {
-        deleteBundle(bundleId);
+        //deleteBundle(bundleId);
         renderBundleList();
+        var orderButton = $('#orderButton');
+        orderButton.text('Ordered!');
+        orderButton.prop('disabled', true);
+        $('#orderModal').modal('hide');
     };
-    xhr.send();
+    xhr.send(requestBody);
+}
+
+function buildCompositeRestRequest(bundleId, firstName, lastName, phoneNumber, textUpdates) {
+    var fullName = firstName + ' ' + lastName;
+    var smsOptOut = !textUpdates;
+    var now = new Date().toISOString();
+
+    return `
+        {
+            "compositeRequest": [
+                {
+                    "method": "POST",
+                    "url": "/services/data/v47.0/sobjects/Account",
+                    "referenceId": "newAccount",
+                    "body": {
+                        "Name": "${fullName}",
+                        "Type": "Customer - Direct",
+                        "Website": "https://pure-aloe.com",
+                        "Description": "Created during Integration demo",
+                        "AccountSource": "Dreamforce Integration Demo Pod Booth"
+                    }
+                },
+                {
+                    "method": "POST",
+                    "url": "/services/data/v47.0/sobjects/Contact",
+                    "referenceId": "newContact",
+                    "body": {
+                        "AccountId": "@{newAccount.id}",
+                        "FirstName": "${firstName}",
+                        "LastName": "${lastName}",
+                        "Phone": "${phoneNumber}",
+                        "Department": "Purchasing",
+                        "Description": "Created during Integration demo",
+                        "SMS_Opt_Out__c": "${smsOptOut}"
+                    }
+                },
+                {
+                    "method": "PATCH",
+                    "url": "/services/data/v47.0/sobjects/Bundle__c/${bundleId}",
+                    "referenceId": "updatedBundle",
+                    "body": {
+                        "Account__c": "@{newAccount.id}",
+                        "Date_Ordered__c": "${now}",
+                        "Status__c": "Ordered By Customer"
+                    }
+                }
+            ]
+        }
+    `;
 }
 
 getBundleList();

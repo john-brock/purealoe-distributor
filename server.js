@@ -1,6 +1,7 @@
 let nforce = require('nforce');
 let faye = require('faye');
 let express = require('express');
+let bodyParser = require('body-parser');
 let cors = require('cors');
 let app = express();
 let server = require('http').Server(app);
@@ -92,36 +93,26 @@ let subscribeToPlatformEvents = () => {
 
 let orderBundle = (req, res) => {
     let bundleId = req.params.bundleId;
-    let event = nforce.createSObject('Bundle_Ordered__e');
-    event.set('Bundle_Id__c', bundleId);
-    if (accountId) {
-        event.set('Account_Id__c', accountId);
-    }
-    org.insert({ sobject: event }, err => {
+    let requestBody = req.body;
+
+    org.postUrl({url: "/services/data/v47.0/composite/", body: requestBody}, err => {
         if (err) {
-            console.error(err);
+            console.error(JSON.stringify(err));
             res.sendStatus(500);
         } else {
-            console.log('platform event published ' + bundleId + ' ' + new Date());
+            console.log('Composite API Request Sent ' + bundleId + ' ' + new Date());
             res.sendStatus(200);
         }
     });
 }
 
 app.use(cors());
+app.use(bodyParser.json()); 
 app.use('/', express.static(__dirname + '/www'));
 app.use('/swagger', express.static(__dirname + '/swagger'));
 app.get('/bundles', getBundles);
 app.get('/bundles/:bundleId', getBundleDetails);
 app.post('/approvals/:bundleId', orderBundle);
-
-/*
-let bayeux = new faye.NodeAdapter({ mount: '/faye', timeout: 45 });
-bayeux.attach(server);
-bayeux.on('disconnect', function (clientId) {
-    console.log('Bayeux server disconnect');
-});
-*/
 
 let PORT = process.env.PORT || 5000;
 
