@@ -35,6 +35,7 @@ In the commands below, terms wrapped in \*asterisks\* signify places where you'l
     heroku config:set SF_USER_NAME=*your_integration_user_name*
     heroku config:set SF_USER_PASSWORD=*your_integration_user_password*
     heroku config:set SF_ENVIRONMENT=*your_env_type*
+    heroku config:set SF_CALLBACK_URL=*your_callback_url*
     ```
 
     Set **SF_ENVIRONMENT** to **sandbox** if using a scratch org, or **production** if using a Developer Edition.
