@@ -1,4 +1,4 @@
-## Pure Aloe Distributor App
+## Pure Aloe Distributor App - DF19 Demo
 
 The Pure Aloe Distributor App is written in Node.js and built to run on Heroku. It is a companion to the <a href="https://github.com/trailheadapps/purealoe" target="_blank">Pure Aloe</a> app, built on Salesforce. Using the two apps, you can explore how to integrate decoupled applications with Salesforce via Platform Events.
 
@@ -35,6 +35,7 @@ In the commands below, terms wrapped in \*asterisks\* signify places where you'l
     heroku config:set SF_USER_NAME=*your_integration_user_name*
     heroku config:set SF_USER_PASSWORD=*your_integration_user_password*
     heroku config:set SF_ENVIRONMENT=*your_env_type*
+    heroku config:set SF_CALLBACK_URL=*your_callback_url*
     ```
 
     Set **SF_ENVIRONMENT** to **sandbox** if using a scratch org, or **production** if using a Developer Edition.
