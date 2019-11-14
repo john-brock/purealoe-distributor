@@ -1,0 +1,11 @@
+PID 3236 received SIGSEGV for address: 0x108b40fe8
+0   segfault-handler.node               0x0000000105ab2038 _ZL16segfault_handleriP9__siginfoPv + 312
+1   libsystem_platform.dylib            0x00007fff5d24ab5d _sigtramp + 29
+2   node                                0x00000001003c39f2 _ZN2v88internal11interpreter19BytecodeArrayWriter9PatchJumpEmm + 162
+3   node                                0x0000000100098073 _ZN4node12_GLOBAL__N_19StringPtr4SaveEv + 53
+4   node                                0x0000000100097394 _ZN4node12_GLOBAL__N_16Parser7ExecuteEPKcm + 156
+5   node                                0x0000000100096700 _ZN4node12_GLOBAL__N_16Parser7ExecuteERKN2v820FunctionCallbackInfoINS2_5ValueEEE + 360
+6   node                                0x00000001001e1480 _ZN2v88internal25FunctionCallbackArguments4CallENS0_15CallHandlerInfoE + 544
+7   node                                0x00000001001e0a5f _ZN2v88internal12_GLOBAL__N_119HandleApiCallHelperILb0EEENS0_11MaybeHandleINS0_6ObjectEEEPNS0_7IsolateENS0_6HandleINS0_10HeapObjectEEESA_NS8_INS0_20FunctionTemplateInfoEEENS8_IS4_EENS0_16BuiltinArgumentsE + 543
+8   node                                0x00000001001e0160 _ZN2v88internalL26Builtin_Impl_HandleApiCallENS0_16BuiltinArgumentsEPNS0_7IsolateE + 272
+9   node                                0x000000010092fcd9 Builtins_CEntry_Return1_DontSaveFPRegs_ArgvOnStack_BuiltinExit + 57
