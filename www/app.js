@@ -68,16 +68,16 @@ function renderOrderModalInner(bundleId) {
                  <div class="form-group">
                     <div class="form-row">
                        <div class="col">
-                          <input type="phone" id="phoneNumberInput" class="form-control" placeholder="Phone Number" value="+15754304788">
+                          <input type="phone" id="phoneNumberInput" class="form-control" placeholder="Phone Number" value="+14153048722">
                        </div>
                        <div class="col">
                           <div class="form-check form-check-inline">
-                             <input class="form-check-input" type="radio" name="textOptions" id="smsUpdatesYes" value=true checked>
-                             <label class="form-check-label" for="smsUpdatesYes">Text Updates</label>
+                             <input class="form-check-input" type="radio" name="textOptions" id="smsSelect" value=true>
+                             <label class="form-check-label" for="smsSelect">Text Updates</label>
                           </div>
                           <div class="form-check form-check-inline">
-                             <input class="form-check-input" type="radio" name="textOptions" id="smsUpdatesNo" value=false>
-                             <label class="form-check-label" for="smsUpdatesNo">No Updates</label>
+                             <input class="form-check-input" type="radio" name="textOptions" id="whatsAppSelect" value=false checked>
+                             <label class="form-check-label" for="whatsAppSelect">WhatsApp</label>
                           </div>
                        </div>
                     </div>
